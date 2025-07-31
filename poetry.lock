@@ -384,18 +384,6 @@ files = [
 ]
 
 [[package]]
-name = "einops"
-version = "0.8.1"
-description = "A new flavour of deep learning operations"
-category = "main"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "einops-0.8.1-py3-none-any.whl", hash = "sha256:919387eb55330f5757c6bea9165c5ff5cfe63a642682ea788a6d472576d81737"},
-    {file = "einops-0.8.1.tar.gz", hash = "sha256:de5d960a7a761225532e0f1959e5315ebeafc0cd43394732f103ca44b9837e84"},
-]
-
-[[package]]
 name = "filelock"
 version = "3.18.0"
 description = "A platform independent file lock."
@@ -411,21 +399,6 @@ files = [
 docs = ["furo (>=2024.8.6)", "sphinx (>=8.1.3)", "sphinx-autodoc-typehints (>=3)"]
 testing = ["covdefaults (>=2.3)", "coverage (>=7.6.10)", "diff-cover (>=9.2.1)", "pytest (>=8.3.4)", "pytest-asyncio (>=0.25.2)", "pytest-cov (>=6)", "pytest-mock (>=3.14)", "pytest-timeout (>=2.3.1)", "virtualenv (>=20.28.1)"]
 typing = ["typing-extensions (>=4.12.2)"]
-
-[[package]]
-name = "flash-attn"
-version = "2.8.2"
-description = "Flash Attention: Fast and Memory-Efficient Exact Attention"
-category = "main"
-optional = false
-python-versions = ">=3.9"
-files = [
-    {file = "flash_attn-2.8.2.tar.gz", hash = "sha256:740a5370f406cbe16155cc6d078ec543a97a137501f32cba89198295e6b80e54"},
-]
-
-[package.dependencies]
-einops = "*"
-torch = "*"
 
 [[package]]
 name = "fsspec"
@@ -2131,4 +2104,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "5e8c4ff7cb98b81675d4042a72c80d577562423bf774bdc4fb1f9d8a016792f1"
+content-hash = "1649876ac90d5f18b70b8eee82986626030fd47363b63300e454f9cc8133e699"
