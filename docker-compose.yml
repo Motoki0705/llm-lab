@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # 開発用サービス
+  dev:
+    build:
+      context: .
+      target: development # Dockerfileのdevelopmentステージを指定
+    ports:
+      - "8888:8888" # Jupyter Labのポート
+    volumes:
+      # ローカルのコードをマウントして、変更を即時反映
+      - .:/app
+      # Hugging Faceのモデルキャッシュを永続化
+      - hf_cache:/app/hf_cache
+    # GPUを使いたい場合（NVIDIA Dockerが必要）
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # 本番（API）用サービス
+  api:
+    build:
+      context: .
+      target: production # Dockerfileのproductionステージを指定
+    ports:
+      - "8000:8000" # APIサーバーのポート
+    volumes:
+      # モデルキャッシュのみ永続化（コードはイメージに焼き込み済み）
+      - hf_cache:/app/hf_cache
+
+# Dockerが管理する名前付きボリュームを定義
+volumes:
+  hf_cache:
