@@ -3,9 +3,9 @@
 {
     "name": "local-llm",
     // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-    "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bullseye",
-    "features": {
-        "ghcr.io/devcontainers-contrib/features/poetry:2": {}
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "target": "development"
     },
 
     // Use 'postCreateCommand' to run commands after the container is created.
