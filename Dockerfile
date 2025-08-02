@@ -7,7 +7,18 @@ FROM python:3.11-slim as base
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    gnupg \
     && rm -rf /var/lib/apt/lists/*
+
+# Node.jsのLTS版をインストール
+# NodeSourceリポジトリのGPGキーを取得し、リポジトリを追加後、nodejsをインストール
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs
+
+# gemini-cliをグローバルにインストール
+RUN npm install -g https://github.com/google-gemini/gemini-cli
+# claude-cliをグローバルにインストール
+RUN npm install -g @anthropic-ai/claude-code
 
 # 環境変数 (Poetry, pip, Hugging Face)
 ENV POETRY_VERSION=1.8.2 \
