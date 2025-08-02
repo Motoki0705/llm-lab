@@ -3,30 +3,32 @@
 LLM-jp-3.1-1.8b-instruct4 モデルを使用したチャットアプリケーション
 """
 
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
 import json
 import logging
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import urllib.parse
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # ログ設定
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class ChatHandler(BaseHTTPRequestHandler):
-    def __init__(self, *args, model=None, tokenizer=None, **kwargs):
+    def __init__(self, *args: Any, model: AutoModelForCausalLM, tokenizer: AutoTokenizer, **kwargs: Any) -> None:
         self.model = model
         self.tokenizer = tokenizer
         super().__init__(*args, **kwargs)
 
-    def do_GET(self):
-        """GETリクエストの処理（シンプルなWebUI）"""
-        if self.path == '/':
+    def do_GET(self) -> None:
+        """GETリクエストの処理(シンプルなWebUI)"""
+        if self.path == "/":
             self.send_response(200)
-            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
-            
+
             html = """
             <!DOCTYPE html>
             <html>
@@ -47,16 +49,16 @@ class ChatHandler(BaseHTTPRequestHandler):
                 <div id="chat-container" class="chat-container"></div>
                 <input type="text" id="user-input" placeholder="質問を入力してください..." onkeypress="if(event.key==='Enter') sendMessage()">
                 <button onclick="sendMessage()">送信</button>
-                
+
                 <script>
                     function sendMessage() {
                         const input = document.getElementById('user-input');
                         const message = input.value.trim();
                         if (!message) return;
-                        
+
                         const container = document.getElementById('chat-container');
                         container.innerHTML += '<div class="user-message"><strong>あなた:</strong> ' + message + '</div>';
-                        
+
                         fetch('/chat', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
@@ -70,45 +72,45 @@ class ChatHandler(BaseHTTPRequestHandler):
                         .catch(error => {
                             container.innerHTML += '<div class="bot-message"><strong>Error:</strong> ' + error + '</div>';
                         });
-                        
+
                         input.value = '';
                     }
                 </script>
             </body>
             </html>
             """
-            self.wfile.write(html.encode('utf-8'))
+            self.wfile.write(html.encode("utf-8"))
         else:
             self.send_error(404)
 
-    def do_POST(self):
-        """POSTリクエストの処理（チャット機能）"""
-        if self.path == '/chat':
-            content_length = int(self.headers['Content-Length'])
+    def do_POST(self) -> None:
+        """POSTリクエストの処理(チャット機能)"""
+        if self.path == "/chat":
+            content_length = int(self.headers["Content-Length"])
             post_data = self.rfile.read(content_length)
-            
+
             try:
-                data = json.loads(post_data.decode('utf-8'))
-                user_message = data.get('message', '')
-                
+                data = json.loads(post_data.decode("utf-8"))
+                user_message = data.get("message", "")
+
                 if not user_message:
-                    self.send_error(400, 'メッセージが空です')
+                    self.send_error(400, "メッセージが空です")
                     return
-                
+
                 # チャット形式でメッセージを構築
                 chat = [
-                    {"role": "system", "content": "以下は、タスクを説明する指示です。要求を適切に満たす応答を書きなさい。"},
+                    {
+                        "role": "system",
+                        "content": "以下は、タスクを説明する指示です。要求を適切に満たす応答を書きなさい。",
+                    },
                     {"role": "user", "content": user_message},
                 ]
-                
+
                 # トークナイズと生成
                 tokenized_input = self.tokenizer.apply_chat_template(
-                    chat, 
-                    add_generation_prompt=True, 
-                    tokenize=True, 
-                    return_tensors="pt"
+                    chat, add_generation_prompt=True, tokenize=True, return_tensors="pt"
                 ).to(self.model.device)
-                
+
                 with torch.no_grad():
                     output = self.model.generate(
                         tokenized_input,
@@ -118,70 +120,69 @@ class ChatHandler(BaseHTTPRequestHandler):
                         temperature=0.7,
                         repetition_penalty=1.05,
                     )[0]
-                
+
                 # レスポンスをデコード
                 full_response = self.tokenizer.decode(output, skip_special_tokens=True)
-                
+
                 # ユーザーの入力部分を除去して、モデルの返答のみを抽出
                 response_start = full_response.find("assistant\n\n") + len("assistant\n\n")
                 if response_start > len("assistant\n\n") - 1:
                     bot_response = full_response[response_start:].strip()
                 else:
                     bot_response = full_response.strip()
-                
+
                 # JSON形式でレスポンスを返す
                 self.send_response(200)
-                self.send_header('Content-type', 'application/json; charset=utf-8')
+                self.send_header("Content-type", "application/json; charset=utf-8")
                 self.end_headers()
-                
-                response_data = {'response': bot_response}
-                self.wfile.write(json.dumps(response_data, ensure_ascii=False).encode('utf-8'))
-                
+
+                response_data = {"response": bot_response}
+                self.wfile.write(json.dumps(response_data, ensure_ascii=False).encode("utf-8"))
+
             except Exception as e:
-                logger.error(f"エラーが発生しました: {e}")
-                self.send_error(500, f'内部サーバーエラー: {str(e)}')
+                logger.exception("エラーが発生しました。")
+                self.send_error(500, f"内部サーバーエラー: {e!s}")
         else:
             self.send_error(404)
 
-def load_model():
+
+def load_model() -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     """モデルとトークナイザーを読み込む"""
     logger.info("モデルとトークナイザーを読み込み中...")
-    
+
     model_name = "llm-jp/llm-jp-3.1-1.8b-instruct4"
-    
+
     # トークナイザーの読み込み
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    
+
     # モデルの読み込み
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        device_map="auto",
-        torch_dtype=torch.bfloat16
-    )
-    
+    model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.bfloat16)
+
     logger.info("モデルとトークナイザーの読み込みが完了しました")
     return model, tokenizer
 
-def main():
+
+def main() -> None:
     """メイン関数"""
     logger.info("LLM-jp-3.1-1.8b-instruct4 チャットサーバーを開始します...")
-    
+
     # モデルとトークナイザーを読み込み
     model, tokenizer = load_model()
-    
+
     # HTTPサーバーを開始
-    def handler(*args, **kwargs):
+    def handler(*args: Any, **kwargs: Any) -> None:
         ChatHandler(*args, model=model, tokenizer=tokenizer, **kwargs)
-    
-    server = HTTPServer(('0.0.0.0', 8000), handler)
+
+    server = HTTPServer(("127.0.0.1", 8000), handler)
     logger.info("サーバーがポート8000で開始されました")
     logger.info("http://localhost:8000 にアクセスしてください")
-    
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         logger.info("サーバーを停止します...")
         server.shutdown()
+
 
 if __name__ == "__main__":
     main()
