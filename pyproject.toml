@@ -53,6 +53,11 @@ testpaths = ["tests"]
 target-version = "py39"
 line-length = 120
 fix = true
+
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint]
 select = [
     # flake8-2020
     "YTT",
@@ -92,8 +97,8 @@ ignore = [
     "E731",
 ]
 
-[tool.ruff.format]
-preview = true
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
 
 [tool.coverage.report]
 skip_empty = true
@@ -101,7 +106,3 @@ skip_empty = true
 [tool.coverage.run]
 branch = true
 source = ["local_llm"]
-
-
-[tool.ruff.per-file-ignores]
-"tests/*" = ["S101"]
