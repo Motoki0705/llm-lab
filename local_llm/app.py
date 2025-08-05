@@ -168,6 +168,9 @@ def main() -> None:
 
     # モデルとトークナイザーを読み込み
     model, tokenizer = load_model()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
+    logger.info(f"モデルは {device} に配置されました")
 
     # HTTPサーバーを開始
     def handler(*args: Any, **kwargs: Any) -> None:
