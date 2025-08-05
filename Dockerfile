@@ -1,24 +1,25 @@
 # =================================================================
 # 1. ベースステージ (開発と本番で共通の環境)
 # =================================================================
-FROM python:3.11-slim as base
+# NVIDIA公式のCUDA/cuDNNイメージをベースにする
+FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04 as base
 
-# システムパッケージのインストール (ML用)
+# APT実行時の対話を無効化し、Python 3.11をインストール
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     gnupg \
-    && rm -rf /var/lib/apt/lists/*
+    software-properties-common \
+    python3.11 \
+    python3-pip \
+    python3.11-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
 # Node.jsのLTS版をインストール
-# NodeSourceリポジトリのGPGキーを取得し、リポジトリを追加後、nodejsをインストール
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
     && apt-get install -y nodejs
-
-# gemini-cliをグローバルにインストール
-RUN npm install -g https://github.com/google-gemini/gemini-cli
-# claude-cliをグローバルにインストール
-RUN npm install -g @anthropic-ai/claude-code
 
 # 環境変数 (Poetry, pip, Hugging Face)
 ENV POETRY_VERSION=1.8.2 \

@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # 開発用サービス
@@ -13,14 +13,14 @@ services:
       - .:/app
       # Hugging Faceのモデルキャッシュを永続化
       - hf_cache:/app/hf_cache
-    # GPUを使いたい場合（NVIDIA Dockerが必要）
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    # GPUを有効化
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all # 利用可能な全てのGPUを割り当てる
+              capabilities: [gpu]
 
   # 本番（API）用サービス
   api:
@@ -32,6 +32,14 @@ services:
     volumes:
       # モデルキャッシュのみ永続化（コードはイメージに焼き込み済み）
       - hf_cache:/app/hf_cache
+    # 本番環境でもGPUを有効化する場合
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
 # Dockerが管理する名前付きボリュームを定義
 volumes:

@@ -1,12 +1,13 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-    "name": "local-llm",
-    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-    "build": {
-        "dockerfile": "../Dockerfile",
-        "target": "development"
-    },
+    "name": "local-llm-gpu",
+    // Docker Composeファイルを使って環境を定義
+    "dockerComposeFile": "../docker-compose.yml",
+    // docker-compose.yml内のどのサービスを使うかを指定
+    "service": "dev",
+    // コンテナが起動するワークスペースのパス
+    "workspaceFolder": "/app",
 
     // Use 'postCreateCommand' to run commands after the container is created.
     "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
@@ -14,13 +15,17 @@
     // Configure tool-specific properties.
     "customizations": {
         "vscode": {
-            "extensions": ["ms-python.python", "editorconfig.editorconfig"],
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "editorconfig.editorconfig"
+            ],
             "settings": {
                 "python.testing.pytestArgs": ["tests"],
                 "python.testing.unittestEnabled": false,
                 "python.testing.pytestEnabled": true,
-                "python.defaultInterpreterPath": "/workspaces/local-llm/.venv/bin/python",
-                "python.testing.pytestPath": "/workspaces/local-llm/.venv/bin/pytest"
+                "python.defaultInterpreterPath": "/app/.venv/bin/python",
+                "python.testing.pytestPath": "/app/.venv/bin/pytest"
             }
         }
     }
